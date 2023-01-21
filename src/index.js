@@ -1,9 +1,10 @@
+import { PrismaClient } from '@prisma/client';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
 
-let count = 0;
+const prisma = new PrismaClient();
 
 dotenv.config();
 const port = process.env.PORT || 8080;
@@ -14,6 +15,10 @@ app.use(cors());
 
 app.get('/', (req, res) => {
   res.send('Hello World');
+})
+
+app.get('/api/signup', (req, res) => {
+  console.log(req);
 })
 
 app.get('/api/count', (req, res) => {
