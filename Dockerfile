@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:18-alpine
 
 WORKDIR /app
 
@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD [ "npm", "run", "start:dev" ] 
+ENTRYPOINT [ "sh", "docker-entrypoint.sh" ]
