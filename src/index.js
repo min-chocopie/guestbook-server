@@ -1,35 +1,40 @@
 import { PrismaClient } from '@prisma/client';
+import { createServer } from 'http';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4'
+import { json } from 'body-parser';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+import schema from './schema';
 
 
 const prisma = new PrismaClient();
 
 dotenv.config();
-const port = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
 
 const app = express();
+const httpServer = createServer(app);
 
-app.use(cors());
+const startApolloServer = async () => {
+  const apolloServer = new ApolloServer({
+    schema,
+  })
 
-app.get('/', (req, res) => {
-  res.send('Hello World');
-})
+  await apolloServer.start();
 
-app.get('/api/signup', (req, res) => {
-  console.log(req);
-})
+  app.use(
+    cors(),
+    json(),
+    expressMiddleware(apolloServer, {
+      context: async ({ req }) => ({ req, prisma }),
+    }),
+  );
 
-app.get('/api/count', (req, res) => {
-  count++;
-  res.json({ result: count });
-})
+  await new Promise((resolve) => httpServer.listen({ port: PORT }, resolve));
+  console.log(`🚀 Server ready at ${PORT}/graphql`);
+}
 
-app.get('/api/count/current', (req, res) => {
-  res.json({ result: count });
-})
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-})
+startApolloServer();
