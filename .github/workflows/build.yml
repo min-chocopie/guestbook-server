@@ -8,6 +8,7 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: simple-server
   
 jobs:
   build:
@@ -32,9 +33,32 @@ jobs:
         
       - name: Docker Image Build and Push to Amazon ECR
         env:
-          ECR_REPOSITORY: simple-server
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+      
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2.0.0
+        
+      - name: Checkout kustomize repository
+        uses: actions/checkout@v3
+        with:
+          repository: min-chocopie/k8s-manifest-simple-web
+          ref: backend
+          token: ${{ secret.ACTION_TOKEN }}
+          path: k8s-manifest-simple-web
+      
+      - name: Update Kubernetes resources
+        run: |
+          cd k8s-manifest-simple-web/overlays/dev
+          kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+      
+      - name: Commit files
+        run: |
+          cd k8s-manifest-simple-web
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git commit -am "Update image tag"
+          git push -u origin backend
