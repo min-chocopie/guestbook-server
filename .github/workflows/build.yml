@@ -47,7 +47,7 @@ jobs:
         with:
           repository: min-chocopie/k8s-manifest-simple-web
           ref: backend
-          token: ${{ secret.ACTION_TOKEN }}
+          token: ${{ secrets.ACTION_TOKEN }}
           path: k8s-manifest-simple-web
       
       - name: Update Kubernetes resources
