@@ -45,19 +45,19 @@ jobs:
       - name: Checkout kustomize repository
         uses: actions/checkout@v3
         with:
-          repository: min-chocopie/k8s-manifest-simple-web
-          ref: backend
+          repository: min-chocopie/cd-simple-server
+          ref: main
           token: ${{ secrets.ACTION_TOKEN }}
-          path: k8s-manifest-simple-web
+          path: cd-simple-server
       
       - name: Update Kubernetes resources
         run: |
-          cd k8s-manifest-simple-web/overlays/dev
+          cd cd-simple-server/overlays/dev
           kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
       
       - name: Commit files
         run: |
-          cd k8s-manifest-simple-web
+          cd cd-simple-server
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
           git commit -am "Update image tag"
