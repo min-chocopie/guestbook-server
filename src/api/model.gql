@@ -1,5 +1,8 @@
-type User {
+type VisitLog {
   id: ID
   name: String
-  email: String
+  password: String
+  comment: String
+  createdAt: String
+  updatedAt: String
 }
