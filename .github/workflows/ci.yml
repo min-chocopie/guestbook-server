@@ -13,10 +13,17 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.image-tag.outputs.sha_short }}
+      
     steps:
       # 작업을 수행하기 위해 Runner에 소스 코드를 가져오는 부분
       - name: Checkout
         uses: actions/checkout@v3
+        
+      - name: Set Image Tag
+        id: image-tag
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
     
       # ECR에 접근하기 위해 AWS 자격 증명 설정
       - name: Configure AWS Credentials
@@ -34,7 +41,7 @@ jobs:
       - name: Docker Image Build and Push to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ steps.image-tag.outputs.sha_short }}
         run: |
           docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
@@ -44,6 +51,16 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+        
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
       - name: Setup Kustomize
         uses: imranismail/setup-kustomize@v2.0.0
         
@@ -56,11 +73,12 @@ jobs:
           path: cd-simple-server
       
       - name: Update Kubernetes resources
-        env: 
-          IMAGE: 767791266862.dkr.ecr.ap-northeast-2.amazonaws.com/simple-server
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ needs.build.outputs.tag }}
         run: |
           cd cd-simple-server/overlays/dev
-          kustomize edit set image ${{ env.IMAGE }}=${{ env.IMAGE }}:${{ github.sha }}
+          kustomize edit set image ${{ env.ECR_REGISTRY }}/$ECR_REPOSITORY=${{ env.ECR_REGISTRY }}/$ECR_REPOSITORY:$IMAGE_TAG
       
       - name: Commit files
         run: |
