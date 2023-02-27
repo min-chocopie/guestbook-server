@@ -13,3 +13,6 @@ https://github.com/min-chocopie/guestbook-client
 
 CD Repository 
 https://github.com/min-chocopie/cd-guestbook-server
+
+Terraform Repository
+https://github.com/min-chocopie/terraform-aws
