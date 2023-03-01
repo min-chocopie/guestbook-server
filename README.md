@@ -7,6 +7,9 @@
 ## 주요 기능
 ⭐️ 닉네임과 비밀번호를 설정하여 방명록을 남길 수 있습니다. ⭐️
 
+## AWS
+![eks](https://user-images.githubusercontent.com/97215602/222164755-38b47d97-4581-4b68-b72f-b9f50063d302.png)
+
 ## 연관 Repository
 Client Repository 
 https://github.com/min-chocopie/guestbook-client
